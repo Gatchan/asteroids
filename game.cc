@@ -21,8 +21,8 @@ Game::Game()
     a.velocity_.x = (rand() / float(RAND_MAX) - .5f) * 2.0f;
     a.velocity_.y = (rand() / float(RAND_MAX) - .5f) * 2.0f;
     a.direction_ = rand() / float(RAND_MAX) * 2 * M_PI;
-    a.bounding_box_.width = 10;
-    a.bounding_box_.height = 10;
+    a.bounding_box_.width = 15 + (rand() / float(RAND_MAX) * 10.0f);
+    a.bounding_box_.height = 15 + (rand() / float(RAND_MAX) * 10.0f);
     asteroids_.push_back(a);
   }
 }

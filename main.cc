@@ -22,26 +22,34 @@ bool DownKeyPress = false;
 bool LeftKeyPress = false;
 bool RightKeyPress = false;
 
+bool show_bounding_boxes = false;
+
 void renderScene (void)
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glColor3f(1.0f, 1.0f, 1.0f);
 
   // Draw awesome spaceship.
+  {
   SpaceShip& ss = game.spaceship_;
   glPushMatrix();
   glLoadIdentity();
   glTranslatef(ss.position_.x, ss.position_.y, 0.0f);
   glRotatef(ss.direction_, 0.0f, 0.0f, 1.0f);
+  glColor3f(1.0f, 0.1f, 0.0f);
   glBegin(GL_TRIANGLES);
-    glVertex2f(-5.0f, -8.0f);
-    glVertex2f(5.0f, -8.0f);
-    glVertex2f(0.0f, 12.0f);
+    const float x_scale = ss.bounding_box_.width / 2.0f;
+    const float y_scale = ss.bounding_box_.height / 2.0f;
+    glVertex2f(-1.0f * x_scale, -1.0f * y_scale);
+    glVertex2f(0.0f * x_scale, 1.0f * y_scale);
+    glVertex2f(1.0f * x_scale, -1.0f * y_scale);
   glEnd();
   glPopMatrix();
+  }
 
+  if (show_bounding_boxes) {
   // Bounding box for spaceship.
+  SpaceShip& ss = game.spaceship_;
   glColor3f(1.0f, 0.0f, 0.0f);
   glPushMatrix();
   glLoadIdentity();
@@ -54,28 +62,46 @@ void renderScene (void)
     glVertex2f(points[0].x, points[0].y);
   glEnd();
   glPopMatrix();
+  }
 
 
-  glColor3f(1.0f, 1.0f, 1.0f);
   // Draw asteroid.
   for (size_t i = 0; i < game.asteroids_.size(); ++i) {
+    glColor3f(0.2f, 0.2f, 0.25f);
     Asteroid& a = game.asteroids_[i];
     glPushMatrix();
     glLoadIdentity();
     glTranslatef(a.position_.x, a.position_.y, 0.0f);
     glRotatef(a.direction_, 0.0f, 0.0f, 1.0f);
     glBegin(GL_TRIANGLE_FAN);
-      const float scale = 10.0f;
-      glVertex2f(-1.6 * scale, 0 * scale);
-      glVertex2f(-1 * scale, 1 * scale);
-      glVertex2f(0.1 * scale, 1.3 * scale);
-      glVertex2f(1 * scale, 1.1 * scale);
-      glVertex2f(1.5 * scale, 0.1 * scale);
-      glVertex2f(1.1 * scale, -0.9 * scale);
-      glVertex2f(0 * scale, -1.2 * scale);
-      glVertex2f(-1 * scale, -0.9 * scale);
-      glVertex2f(-1.6 * scale, 0 * scale);
+      const float x_scale = a.bounding_box_.width / 2.0f;
+      const float y_scale = a.bounding_box_.height / 2.0f;
+      glVertex2f(-1.0f * x_scale, 0.0f * y_scale);
+      glVertex2f(-0.8f * x_scale, 0.3f * y_scale);
+      glVertex2f(-0.1f * x_scale, 0.7f * y_scale);
+      glVertex2f(0.4f * x_scale, 1.0f * y_scale);
+      glVertex2f(1.0f * x_scale, 0.6f * y_scale);
+      glVertex2f(0.9f * x_scale, -0.3f * y_scale);
+      glVertex2f(0.3f * x_scale, -0.7f * y_scale);
+      glVertex2f(-0.5f * x_scale, -1.0f * y_scale);
+      glVertex2f(-1.0f * x_scale, 0.0f * y_scale);
     glEnd();
+
+    // Bounding box.
+    if (show_bounding_boxes) {
+      glColor3f(1.0f, 0.0f, 0.0f);
+      glPushMatrix();
+      glLoadIdentity();
+      std::vector<Point> points;
+      computeBoundingBox(a, &points);
+      glBegin(GL_LINE_STRIP);
+        for (size_t i = 0; i < points.size(); ++i) {
+          glVertex2f(points[i].x, points[i].y);
+        }
+        glVertex2f(points[0].x, points[0].y);
+      glEnd();
+      glPopMatrix();
+    }
   }
 
   glutSwapBuffers();
@@ -87,21 +113,26 @@ void timerCallback(int)
 
   // Update velocity of the spaceship.
   if (UpKeyPress) {
-    if (ss.velocity_.x < MaxVelocity) {
-      ss.velocity_.x -= sin(ss.direction_ / 360.0f * 2 * M_PI);
-    }
-    if (ss.velocity_.y < MaxVelocity) {
-      ss.velocity_.y += cos(ss.direction_ / 360.0f * 2 * M_PI);
-    }
+    ss.velocity_.x -= sin(ss.direction_ / 360.0f * 2 * M_PI);
+    ss.velocity_.y += cos(ss.direction_ / 360.0f * 2 * M_PI);
   }
   if (DownKeyPress) {
-    if (ss.velocity_.x > -MaxVelocity) {
-      ss.velocity_.x += sin(ss.direction_ / 360.0f * 2 * M_PI);
-    }
-    if (ss.velocity_.y > -MaxVelocity) {
-      ss.velocity_.y -= cos(ss.direction_ / 360.0f * 2 * M_PI);
-    }
+    ss.velocity_.x += sin(ss.direction_ / 360.0f * 2 * M_PI);
+    ss.velocity_.y -= cos(ss.direction_ / 360.0f * 2 * M_PI);
   }
+
+  if (ss.velocity_.x > MaxVelocity) {
+    ss.velocity_.x = MaxVelocity;
+  } else if (ss.velocity_.x < -MaxVelocity) {
+    ss.velocity_.x = -MaxVelocity;
+  }
+
+  if (ss.velocity_.y > MaxVelocity) {
+    ss.velocity_.y = MaxVelocity;
+  } else if (ss.velocity_.y < -MaxVelocity) {
+    ss.velocity_.y = -MaxVelocity;
+  }
+
   if (LeftKeyPress) {
     ss.direction_ += 5.0f;
   }
@@ -132,6 +163,7 @@ void timerCallback(int)
     Asteroid& a = game.asteroids_[i];
     a.position_.x = a.position_.x + a.velocity_.x;
     a.position_.y = a.position_.y + a.velocity_.y;
+    a.direction_ += a.rotation_speed_;
 
     if (a.position_.x < 0.0f || a.position_.x > PanelWidth) {
       a.velocity_.x *= -1.0f;
@@ -176,6 +208,17 @@ void timerCallback(int)
   renderScene();
 
   glutTimerFunc(CallbackTime, timerCallback, 0);
+}
+
+void processKeys (unsigned char key, int, int)
+{
+  switch (key) {
+    case 'd':
+      show_bounding_boxes = !show_bounding_boxes;
+      break;
+    default:
+      break;
+    }
 }
 
 void processSpecialKeys (int key, int, int)
@@ -228,6 +271,7 @@ int main (int argc, char * argv[])
 
   glutDisplayFunc(renderScene);
   glutTimerFunc(CallbackTime, timerCallback, 0);
+  glutKeyboardFunc(processKeys);
   glutSpecialFunc(processSpecialKeys);
   glutSpecialUpFunc(processSpecialKeysUp);
 

@@ -4,5 +4,9 @@
 
 class Asteroid: public GameObject
 {
+  public:
+    Asteroid();
+
+    float rotation_speed_;
 
 };
