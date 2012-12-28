@@ -28,44 +28,7 @@ void renderScene (void)
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-  // Draw awesome spaceship.
-  {
-  SpaceShip& ss = game.spaceship_;
-  glPushMatrix();
-  glLoadIdentity();
-  glTranslatef(ss.position_.x, ss.position_.y, 0.0f);
-  glRotatef(ss.direction_, 0.0f, 0.0f, 1.0f);
-  glColor3f(1.0f, 0.1f, 0.0f);
-  glBegin(GL_TRIANGLES);
-    const float x_scale = ss.bounding_box_.width / 2.0f;
-    const float y_scale = ss.bounding_box_.height / 2.0f;
-    glVertex2f(-1.0f * x_scale, -1.0f * y_scale);
-    glVertex2f(0.0f * x_scale, 1.0f * y_scale);
-    glVertex2f(1.0f * x_scale, -1.0f * y_scale);
-  glEnd();
-  glPopMatrix();
-  }
-
-  if (show_bounding_boxes) {
-  // Bounding box for spaceship.
-  SpaceShip& ss = game.spaceship_;
-  glColor3f(1.0f, 0.0f, 0.0f);
-  glPushMatrix();
-  glLoadIdentity();
-  std::vector<Point> points;
-  computeBoundingBox(ss, &points);
-  glBegin(GL_LINE_STRIP);
-    for (size_t i = 0; i < points.size(); ++i) {
-      glVertex2f(points[i].x, points[i].y);
-    }
-    glVertex2f(points[0].x, points[0].y);
-  glEnd();
-  glPopMatrix();
-  }
-
-
-  // Draw asteroid.
+  // Draw asteroids.
   for (size_t i = 0; i < game.asteroids_.size(); ++i) {
     glColor3f(0.2f, 0.2f, 0.25f);
     Asteroid& a = game.asteroids_[i];
@@ -87,7 +50,7 @@ void renderScene (void)
       glVertex2f(-1.0f * x_scale, 0.0f * y_scale);
     glEnd();
 
-    // Bounding box.
+    // Bounding boxes.
     if (show_bounding_boxes) {
       glColor3f(1.0f, 0.0f, 0.0f);
       glPushMatrix();
@@ -104,11 +67,70 @@ void renderScene (void)
     }
   }
 
+
+  // Draw awesome spaceship.
+  if (game.over_) {  // This is actually a crash.
+    SpaceShip& ss = game.spaceship_;
+    glPushMatrix();
+    glLoadIdentity();
+    glTranslatef(ss.position_.x, ss.position_.y, 0.0f);
+    glRotatef(ss.direction_, 0.0f, 0.0f, 1.0f);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(GL_TRIANGLE_FAN);
+      const float steps = 100;
+      const float scale = std::max(ss.bounding_box_.width,
+                                   ss.bounding_box_.height) * 2.0f;
+      for (int i = 0; i < steps; ++i) {
+        const float angle = 2.0f * M_PI * i / float(steps);
+        glVertex2f(scale * sin(angle), scale * cos(angle));
+      }
+
+    glEnd();
+    glPopMatrix();
+  } else {
+    SpaceShip& ss = game.spaceship_;
+    glPushMatrix();
+    glLoadIdentity();
+    glTranslatef(ss.position_.x, ss.position_.y, 0.0f);
+    glRotatef(ss.direction_, 0.0f, 0.0f, 1.0f);
+    glColor3f(1.0f, 0.1f, 0.0f);
+    glBegin(GL_TRIANGLES);
+      const float x_scale = ss.bounding_box_.width / 2.0f;
+      const float y_scale = ss.bounding_box_.height / 2.0f;
+      glVertex2f(-1.0f * x_scale, -1.0f * y_scale);
+      glVertex2f(0.0f * x_scale, 1.0f * y_scale);
+      glVertex2f(1.0f * x_scale, -1.0f * y_scale);
+    glEnd();
+    glPopMatrix();
+  }
+
+  if (show_bounding_boxes) {
+    // Bounding box for spaceship.
+    SpaceShip& ss = game.spaceship_;
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glPushMatrix();
+    glLoadIdentity();
+    std::vector<Point> points;
+    computeBoundingBox(ss, &points);
+    glBegin(GL_LINE_STRIP);
+      for (size_t i = 0; i < points.size(); ++i) {
+        glVertex2f(points[i].x, points[i].y);
+      }
+      glVertex2f(points[0].x, points[0].y);
+    glEnd();
+    glPopMatrix();
+  }
+
   glutSwapBuffers();
 }
 
 void timerCallback(int)
 {
+  if (game.over_) {
+    return;
+  }
+
+
   SpaceShip& ss = game.spaceship_;
 
   // Update velocity of the spaceship.
@@ -134,10 +156,10 @@ void timerCallback(int)
   }
 
   if (LeftKeyPress) {
-    ss.direction_ += 5.0f;
+    ss.direction_ += 10.0f;
   }
   if (RightKeyPress) {
-    ss.direction_ -= 5.0f;
+    ss.direction_ -= 10.0f;
   }
 
   // Update spaceship position.
@@ -180,30 +202,33 @@ void timerCallback(int)
     Asteroid& a = game.asteroids_[i];
 
     if (collision(ss, a)) {
-      std::cout << "collision" << std::endl;
+      game.over_ = true;
     }
   }
 
-
   // Check for collisions between asteroids.
-  //for (size_t i = 0; i < game.asteroids_.size(); ++i) {
-  //  Asteroid& a = game.asteroids_[i];
+  for (size_t i = 0; i < game.asteroids_.size(); ++i) {
+    Asteroid& a = game.asteroids_[i];
 
-  //  for (size_t k = 0; k < game.asteroids_.size(); ++k) {
-  //    if (i == k) {
-  //      continue;
-  //    }
+    for (size_t k = 0; k < game.asteroids_.size(); ++k) {
+      if (i == k) {
+        continue;
+      }
 
-  //    Asteroid& b = game.asteroids_[k];
+      Asteroid& b = game.asteroids_[k];
 
-  //    if (collision(a, b)) {
-
-  //    }
-  //  }
-
-  //}
-
-
+      if (collision(a, b)) {
+        // Make them bounce only if in the next iteration they will be closer.
+        if (distance(a.position_, b.position_) >
+            distance(a.position_ + a.velocity_, b.position_ + b.velocity_)) {
+          a.velocity_.x *= -1.0f;
+          a.velocity_.y *= -1.0f;
+          b.velocity_.x *= -1.0f;
+          b.velocity_.y *= -1.0f;
+        }
+      }
+    }
+  }
 
   renderScene();
 

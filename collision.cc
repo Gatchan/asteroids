@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <cassert>
 
 void translateBoundingBox(const GameObject& object, std::vector<Point>* points)
 {
@@ -41,16 +42,55 @@ void computeBoundingBox(const GameObject& object, std::vector<Point>* points)
                     points);
 }
 
+void project(const Point& axis, const std::vector<Point>& shape,
+             float* minimum, float* maximum)
+{
+  assert(shape.size() > 0);
+  *minimum = *maximum = axis * shape[0];
+
+  for (size_t i = 1; i < shape.size(); ++i) {
+    const float projection = axis * shape[i];
+    *minimum = std::min(*minimum, projection);
+    *maximum = std::max(*maximum, projection);
+  }
+}
+
+bool overlap(const std::vector<Point>& lhs, const std::vector<Point>& rhs)
+{
+  for (size_t i = 0; i < lhs.size(); ++i) {
+    const Point edge = lhs[(i + 1) % lhs.size()] - lhs[i];
+    const Point perpendicular(-edge.y, edge.x);
+
+    float min_lhs, max_lhs;
+    project(perpendicular, lhs, &min_lhs, &max_lhs);
+
+    float min_rhs, max_rhs;
+    project(perpendicular, rhs, &min_rhs, &max_rhs);
+
+    if (min_lhs > max_rhs || max_lhs < min_rhs) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool collision(const GameObject& lhs, const GameObject rhs)
 {
   std::vector<Point> lhs_points;
   translateBoundingBox(lhs, &lhs_points);
-  rotateBoundingBox(lhs.position_, lhs.direction_ / 360 * 2 * M_PI, &lhs_points);
+  rotateBoundingBox(lhs.position_, lhs.direction_ / 360 * 2 * M_PI,
+                    &lhs_points);
 
   std::vector<Point> rhs_points;
   translateBoundingBox(rhs, &rhs_points);
-  rotateBoundingBox(rhs.position_, rhs.direction_ / 360 * 2 * M_PI, &rhs_points);
+  rotateBoundingBox(rhs.position_, rhs.direction_ / 360 * 2 * M_PI,
+                    &rhs_points);
 
-  return false;
+  if (!overlap(lhs_points, rhs_points) || !overlap(rhs_points, lhs_points)) {
+    return false;
+  }
+
+  return true;
 }
 

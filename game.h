@@ -14,5 +14,5 @@ class Game
     SpaceShip spaceship_;
     std::vector<Asteroid> asteroids_;
 
-
+    bool over_;
 };

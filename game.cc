@@ -5,6 +5,7 @@
 #include <cmath>
 
 Game::Game()
+: over_(false)
 {
   spaceship_.position_.x = 100.0f;
   spaceship_.position_.y = 100.0f;
@@ -23,6 +24,7 @@ Game::Game()
     a.direction_ = rand() / float(RAND_MAX) * 2 * M_PI;
     a.bounding_box_.width = 15 + (rand() / float(RAND_MAX) * 10.0f);
     a.bounding_box_.height = 15 + (rand() / float(RAND_MAX) * 10.0f);
+
     asteroids_.push_back(a);
   }
 }
