@@ -68,6 +68,27 @@ void renderScene (void)
   }
 
 
+  // Draw bullets.
+  for (size_t i = 0; i < game.bullets_.size(); ++i) {
+    Bullet& b = game.bullets_[i];
+    glPushMatrix();
+    glLoadIdentity();
+    glTranslatef(b.position_.x, b.position_.y, 0.0f);
+    glRotatef(b.direction_, 0.0f, 0.0f, 1.0f);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(GL_TRIANGLE_FAN);
+      const float steps = 10;
+      const float scale = b.bounding_box_.width;
+      for (int i = 0; i < steps; ++i) {
+        const float angle = 2.0f * M_PI * i / float(steps);
+        glVertex2f(scale * sin(angle), scale * cos(angle));
+      }
+
+    glEnd();
+    glPopMatrix();
+  }
+
+
   // Draw awesome spaceship.
   if (game.over_) {  // This is actually a crash.
     SpaceShip& ss = game.spaceship_;
@@ -230,6 +251,14 @@ void timerCallback(int)
     }
   }
 
+  // Update positions of bullets.
+  for (size_t i = 0; i < game.bullets_.size(); ++i) {
+    Bullet& b = game.bullets_[i];
+    b.position_.x += b.velocity_.x;
+    b.position_.y += b.velocity_.y;
+  }
+
+
   renderScene();
 
   glutTimerFunc(CallbackTime, timerCallback, 0);
@@ -240,6 +269,20 @@ void processKeys (unsigned char key, int, int)
   switch (key) {
     case 'd':
       show_bounding_boxes = !show_bounding_boxes;
+      break;
+    case ' ':
+      {
+      SpaceShip& ss = game.spaceship_;
+      Bullet b;
+      b.bounding_box_.width = 2;
+      b.bounding_box_.height = 2;
+      b.position_.x = ss.position_.x;  // Update
+      b.position_.y = ss.position_.y;
+      b.velocity_.x = ss.velocity_.x + MaxVelocity * 1.2 * -sin(ss.direction_ / 360.0f * 2 * M_PI);
+      b.velocity_.y = ss.velocity_.y + MaxVelocity * 1.2 * cos(ss.direction_ / 360.0f * 2 * M_PI);
+      b.direction_ = ss.direction_;
+      game.bullets_.push_back(b);
+      }
       break;
     default:
       break;

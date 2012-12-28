@@ -5,6 +5,7 @@
 #include "gameobject.h"
 #include "spaceship.h"
 #include "asteroid.h"
+#include "bullet.h"
 
 class Game
 {
@@ -12,6 +13,7 @@ class Game
     Game();
 
     SpaceShip spaceship_;
+    std::vector<Bullet> bullets_;
     std::vector<Asteroid> asteroids_;
 
     bool over_;
