@@ -21,6 +21,7 @@ bool UpKeyPress = false;
 bool DownKeyPress = false;
 bool LeftKeyPress = false;
 bool RightKeyPress = false;
+bool ShootKeyPress = false;
 
 bool show_bounding_boxes = false;
 
@@ -153,6 +154,7 @@ void timerCallback(int)
 
 
   SpaceShip& ss = game.spaceship_;
+  ss.Update();
 
   // Update velocity of the spaceship.
   if (UpKeyPress) {
@@ -183,22 +185,12 @@ void timerCallback(int)
     ss.direction_ -= 10.0f;
   }
 
-  // Update spaceship position.
-  ss.position_.x = ss.position_.x + ss.velocity_.x;
-  ss.position_.y = ss.position_.y + ss.velocity_.y;
-  ss.velocity_.x *= .99f;
-  ss.velocity_.y *= .99f;
-
-  if (ss.position_.x < 0.0f) {
-    ss.position_.x = PanelWidth;
-  } else if (ss.position_.x > PanelWidth) {
-    ss.position_.x = 0.0f;
-  }
-
-  if (ss.position_.y < 0.0f) {
-    ss.position_.y = PanelHeight;
-  } else if (ss.position_.y > PanelHeight) {
-    ss.position_.y = 0.0f;
+  // Shooting.
+  if (ShootKeyPress) {
+    Bullet b(&game);
+    if (ss.Shoot(&b)) {
+      game.bullets_.push_back(b);
+    }
   }
 
   // Update asteroids position.
@@ -271,18 +263,20 @@ void processKeys (unsigned char key, int, int)
       show_bounding_boxes = !show_bounding_boxes;
       break;
     case ' ':
-      {
-      SpaceShip& ss = game.spaceship_;
-      Bullet b;
-      b.bounding_box_.width = 2;
-      b.bounding_box_.height = 2;
-      b.position_.x = ss.position_.x;  // Update
-      b.position_.y = ss.position_.y;
-      b.velocity_.x = ss.velocity_.x + MaxVelocity * 1.2 * -sin(ss.direction_ / 360.0f * 2 * M_PI);
-      b.velocity_.y = ss.velocity_.y + MaxVelocity * 1.2 * cos(ss.direction_ / 360.0f * 2 * M_PI);
-      b.direction_ = ss.direction_;
-      game.bullets_.push_back(b);
-      }
+      ShootKeyPress = true;
+      break;
+    default:
+      break;
+    }
+}
+
+void processKeysUp (unsigned char key, int, int)
+{
+  switch (key) {
+    case 'd':
+      break;
+    case ' ':
+      ShootKeyPress = false;
       break;
     default:
       break;
@@ -340,6 +334,7 @@ int main (int argc, char * argv[])
   glutDisplayFunc(renderScene);
   glutTimerFunc(CallbackTime, timerCallback, 0);
   glutKeyboardFunc(processKeys);
+  glutKeyboardUpFunc(processKeysUp);
   glutSpecialFunc(processSpecialKeys);
   glutSpecialUpFunc(processSpecialKeysUp);
 
@@ -349,7 +344,8 @@ int main (int argc, char * argv[])
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-
+  game.panel_width_ = PanelWidth;
+  game.panel_height_ = PanelHeight;
 
   glutMainLoop();
 

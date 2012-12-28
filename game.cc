@@ -5,7 +5,8 @@
 #include <cmath>
 
 Game::Game()
-: over_(false)
+: spaceship_(this)
+, over_(false)
 {
   spaceship_.position_.x = 100.0f;
   spaceship_.position_.y = 100.0f;
@@ -16,7 +17,7 @@ Game::Game()
   spaceship_.bounding_box_.height = 20;
 
   for (int i = 0; i < 20; ++i) {
-    Asteroid a;
+    Asteroid a(this);
     a.position_.x = rand() % 800;
     a.position_.y = rand() % 600;
     a.velocity_.x = (rand() / float(RAND_MAX) - .5f) * 2.0f;

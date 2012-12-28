@@ -17,4 +17,6 @@ class Game
     std::vector<Asteroid> asteroids_;
 
     bool over_;
+    float panel_width_;
+    float panel_height_;
 };

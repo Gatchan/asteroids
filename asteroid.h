@@ -5,7 +5,7 @@
 class Asteroid: public GameObject
 {
   public:
-    Asteroid();
+    Asteroid(Game* game);
 
     float rotation_speed_;
 
