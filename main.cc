@@ -25,9 +25,38 @@ bool ShootKeyPress = false;
 
 bool show_bounding_boxes = false;
 
+bool OnScreen (const GameObject& object) {
+  if (object.position_.x < 0.0f || object.position_.x > PanelWidth ||
+      object.position_.y < 0.0f || object.position_.y > PanelHeight) {
+    return false;
+  }
+
+  return true;
+}
+
 void renderScene (void)
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  // Draw bullets.
+  for (size_t i = 0; i < game.bullets_.size(); ++i) {
+    Bullet& b = game.bullets_[i];
+    glPushMatrix();
+    glLoadIdentity();
+    glTranslatef(b.position_.x, b.position_.y, 0.0f);
+    glRotatef(b.direction_, 0.0f, 0.0f, 1.0f);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(GL_TRIANGLE_FAN);
+      const float steps = 10;
+      const float scale = b.bounding_box_.width;
+      for (int i = 0; i < steps; ++i) {
+        const float angle = 2.0f * M_PI * i / float(steps);
+        glVertex2f(scale * sin(angle), scale * cos(angle));
+      }
+
+    glEnd();
+    glPopMatrix();
+  }
 
   // Draw asteroids.
   for (size_t i = 0; i < game.asteroids_.size(); ++i) {
@@ -69,25 +98,6 @@ void renderScene (void)
   }
 
 
-  // Draw bullets.
-  for (size_t i = 0; i < game.bullets_.size(); ++i) {
-    Bullet& b = game.bullets_[i];
-    glPushMatrix();
-    glLoadIdentity();
-    glTranslatef(b.position_.x, b.position_.y, 0.0f);
-    glRotatef(b.direction_, 0.0f, 0.0f, 1.0f);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_TRIANGLE_FAN);
-      const float steps = 10;
-      const float scale = b.bounding_box_.width;
-      for (int i = 0; i < steps; ++i) {
-        const float angle = 2.0f * M_PI * i / float(steps);
-        glVertex2f(scale * sin(angle), scale * cos(angle));
-      }
-
-    glEnd();
-    glPopMatrix();
-  }
 
 
   // Draw awesome spaceship.
@@ -192,6 +202,28 @@ void timerCallback(int)
       game.bullets_.push_back(b);
     }
   }
+
+  // Remove bullets when they are out of the screen.
+  typedef std::vector<Bullet>::iterator it_bullets;
+  for (it_bullets it = game.bullets_.begin(); it != game.bullets_.end(); ) {
+    if (!OnScreen(*it)) {
+      it = game.bullets_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
+  for (size_t k = 0; k < game.bullets_.size(); ++k) {
+      for (size_t i = 0; i < game.asteroids_.size(); ++i) {
+        if (collision(game.bullets_[k], game.asteroids_[i])) {
+          game.asteroids_[i].velocity_.x += game.bullets_[k].velocity_.x * 0.1;
+          game.asteroids_[i].velocity_.y += game.bullets_[k].velocity_.y * 0.1;
+          game.bullets_.erase(game.bullets_.begin() + k);
+          break;
+        }
+      }
+  }
+
 
   // Update asteroids position.
   for (size_t i = 0; i < game.asteroids_.size(); ++i) {
