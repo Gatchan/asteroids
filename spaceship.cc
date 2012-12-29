@@ -14,28 +14,27 @@ SpaceShip::SpaceShip(Game* game)
 
 void SpaceShip::Update()
 {
-  if (reload_countdown_ > 0) {
-    --reload_countdown_;
-  }
+  // Upate position.
+  GameObject::Update();
 
-  // Update position.
-  position_.x = position_.x + velocity_.x;
-  position_.y = position_.y + velocity_.y;
   velocity_.x *= .99f;
   velocity_.y *= .99f;
 
   if (position_.x < 0.0f) {
-    position_.x = game_->panel_width_;
-  } else if (position_.x > game_->panel_width_) {
+    position_.x = game_->WindowSize().width;
+  } else if (position_.x > game_->WindowSize().width) {
     position_.x = 0.0f;
   }
 
   if (position_.y < 0.0f) {
-    position_.y = game_->panel_height_;
-  } else if (position_.y > game_->panel_height_) {
+    position_.y = game_->WindowSize().height;
+  } else if (position_.y > game_->WindowSize().height) {
     position_.y = 0.0f;
   }
 
+  if (reload_countdown_ > 0) {
+    --reload_countdown_;
+  }
 }
 
 bool SpaceShip::Shoot(Bullet* bullet)

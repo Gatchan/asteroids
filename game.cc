@@ -29,3 +29,13 @@ Game::Game()
     asteroids_.push_back(a);
   }
 }
+
+
+void Game::SetWindowSize(const Size& size)
+{
+  window_ = size;
+}
+Size Game::WindowSize() const
+{
+  return window_;
+}

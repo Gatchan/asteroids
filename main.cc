@@ -12,12 +12,11 @@
 #include "game.h"
 
 static const size_t CallbackTime = 40;
-static const int PanelWidth = 800;
-static const int PanelHeight = 600;
 static const float MaxVelocity = 10.0f;
 static const float MaxVelocityAsteroid = 5.0f;
 
 Game game;
+
 bool UpKeyPress = false;
 bool DownKeyPress = false;
 bool LeftKeyPress = false;
@@ -25,15 +24,6 @@ bool RightKeyPress = false;
 bool ShootKeyPress = false;
 
 bool show_bounding_boxes = false;
-
-bool OnScreen (const GameObject& object) {
-  if (object.position_.x < 0.0f || object.position_.x > PanelWidth ||
-      object.position_.y < 0.0f || object.position_.y > PanelHeight) {
-    return false;
-  }
-
-  return true;
-}
 
 void renderScene (void)
 {
@@ -189,10 +179,16 @@ void timerCallback(int)
     }
   }
 
+  // Update positions of bullets.
+  for (size_t i = 0; i < game.bullets_.size(); ++i) {
+    Bullet& b = game.bullets_[i];
+    b.position_ += b.velocity_;
+  }
+
   // Remove bullets when they are out of the screen.
   typedef std::vector<Bullet>::iterator it_bullets;
   for (it_bullets it = game.bullets_.begin(); it != game.bullets_.end(); ) {
-    if (!OnScreen(*it)) {
+    if (!it->OnScreen()) {
       it = game.bullets_.erase(it);
     } else {
       ++it;
@@ -202,8 +198,7 @@ void timerCallback(int)
   for (size_t k = 0; k < game.bullets_.size(); ++k) {
       for (size_t i = 0; i < game.asteroids_.size(); ++i) {
         if (collision(game.bullets_[k], game.asteroids_[i])) {
-          game.asteroids_[i].velocity_.x += game.bullets_[k].velocity_.x * 0.1;
-          game.asteroids_[i].velocity_.y += game.bullets_[k].velocity_.y * 0.1;
+          game.asteroids_[i].velocity_ += game.bullets_[k].velocity_ * 0.1;
           game.asteroids_[i].velocity_.x =
               std::max(std::min(game.asteroids_[i].velocity_.x,
                                 MaxVelocityAsteroid), -MaxVelocityAsteroid);
@@ -219,15 +214,14 @@ void timerCallback(int)
   // Update asteroids position.
   for (size_t i = 0; i < game.asteroids_.size(); ++i) {
     Asteroid& a = game.asteroids_[i];
-    a.position_.x = a.position_.x + a.velocity_.x;
-    a.position_.y = a.position_.y + a.velocity_.y;
+    a.position_ += a.velocity_;
     a.direction_ += a.rotation_speed_;
 
-    if (a.position_.x < 0.0f || a.position_.x > PanelWidth) {
+    if (a.position_.x < 0.0f || a.position_.x > game.WindowSize().width) {
       a.velocity_.x *= -1.0f;
     }
 
-    if (a.position_.y < 0.0f || a.position_.y > PanelHeight) {
+    if (a.position_.y < 0.0f || a.position_.y > game.WindowSize().height) {
       a.velocity_.y *= -1.0f;
     }
   }
@@ -258,21 +252,13 @@ void timerCallback(int)
         if (distance(a.position_, b.position_) >
             distance(a.position_ + a.velocity_, b.position_ + b.velocity_)) {
           std::swap(a.velocity_, b.velocity_);
-          a.velocity_.x *= 0.9;
-          a.velocity_.y *= 0.9;
-          b.velocity_.x *= 0.9;
-          b.velocity_.y *= 0.9;
+          a.velocity_ *= 0.9f;
+          b.velocity_ *= 0.9f;
         }
       }
     }
   }
 
-  // Update positions of bullets.
-  for (size_t i = 0; i < game.bullets_.size(); ++i) {
-    Bullet& b = game.bullets_[i];
-    b.position_.x += b.velocity_.x;
-    b.position_.y += b.velocity_.y;
-  }
 
 
   renderScene();
@@ -349,11 +335,13 @@ void processSpecialKeysUp (int key, int, int)
 
 int main (int argc, char * argv[])
 {
+  game.SetWindowSize(Size(800, 600));
+
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
   glEnable(GL_MULTISAMPLE);
   glutInitWindowPosition(100, 100);
-  glutInitWindowSize(PanelWidth, PanelHeight);
+  glutInitWindowSize(game.WindowSize().width, game.WindowSize().height);
   glutCreateWindow("Asteroids");
 
   glutDisplayFunc(renderScene);
@@ -365,12 +353,10 @@ int main (int argc, char * argv[])
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluOrtho2D(0, PanelWidth, 0, PanelHeight);
+  gluOrtho2D(0, game.WindowSize().width, 0, game.WindowSize().height);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  game.panel_width_ = PanelWidth;
-  game.panel_height_ = PanelHeight;
 
   glutMainLoop();
 

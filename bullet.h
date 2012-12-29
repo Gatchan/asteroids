@@ -8,5 +8,5 @@ class Bullet: public GameObject
 {
   public:
     Bullet(Game* game);
-
+    void Update();
 };

@@ -21,9 +21,9 @@ void translateBoundingBox(const GameObject& object, std::vector<Point>* points)
 
 Point rotatePoint(const Point& origin, const Point& point, const float angle)
 {
-  return Point(cos(angle) * (point.x - origin.x) - \
+  return Point(cos(angle) * (point.x - origin.x) -
                sin(angle) * (point.y - origin.y) + origin.x,
-               sin(angle) * (point.x - origin.x) + \
+               sin(angle) * (point.x - origin.x) +
                cos(angle) * (point.y - origin.y) + origin.y);
 }
 
@@ -46,10 +46,10 @@ void project(const Point& axis, const std::vector<Point>& shape,
              float* minimum, float* maximum)
 {
   assert(shape.size() > 0);
-  *minimum = *maximum = axis * shape[0];
+  *minimum = *maximum = axis.Dot(shape[0]);
 
   for (size_t i = 1; i < shape.size(); ++i) {
-    const float projection = axis * shape[i];
+    const float projection = axis.Dot(shape[i]);
     *minimum = std::min(*minimum, projection);
     *maximum = std::max(*maximum, projection);
   }

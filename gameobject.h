@@ -12,6 +12,10 @@ class GameObject
   public:
     GameObject(Game* game);
 
+    virtual void Update();
+
+    bool OnScreen() const;
+
     Point position_;
     Vector velocity_;
     float direction_;

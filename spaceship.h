@@ -12,7 +12,7 @@ class SpaceShip: public GameObject
     SpaceShip(Game* game);
     bool Shoot(Bullet* bullet);
 
-    void Update();  // This is so gonna be a virtual method...
+    void Update();
     void Thrust(const enum Thrust thrust);
     void Turn(const enum Turn turn);
 
