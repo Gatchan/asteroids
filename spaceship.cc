@@ -56,3 +56,41 @@ bool SpaceShip::Shoot(Bullet* bullet)
 
   return true;
 }
+
+void SpaceShip::Turn(const enum Turn turn)
+{
+  switch (turn) {
+    case Left:
+     direction_ += 10.0f;
+     break;
+    case Right:
+     direction_ -= 10.0f;
+     break;
+  }
+}
+
+void SpaceShip::Thrust(const enum Thrust thrust)
+{
+  switch (thrust) {
+    case Forward:
+      velocity_.x -= sin(direction_ / 360.0f * 2 * M_PI);
+      velocity_.y += cos(direction_ / 360.0f * 2 * M_PI);
+      break;
+    case Backward:
+      velocity_.x += sin(direction_ / 360.0f * 2 * M_PI);
+      velocity_.y -= cos(direction_ / 360.0f * 2 * M_PI);
+      break;
+  }
+
+  if (velocity_.x > k_max_velocity_) {
+    velocity_.x = k_max_velocity_;
+  } else if (velocity_.x < -k_max_velocity_) {
+    velocity_.x = -k_max_velocity_;
+  }
+
+  if (velocity_.y > k_max_velocity_) {
+    velocity_.y = k_max_velocity_;
+  } else if (velocity_.y < -k_max_velocity_) {
+    velocity_.y = -k_max_velocity_;
+  }
+}

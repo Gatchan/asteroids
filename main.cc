@@ -15,6 +15,7 @@ static const size_t CallbackTime = 40;
 static const int PanelWidth = 800;
 static const int PanelHeight = 600;
 static const float MaxVelocity = 10.0f;
+static const float MaxVelocityAsteroid = 5.0f;
 
 Game game;
 bool UpKeyPress = false;
@@ -162,44 +163,29 @@ void timerCallback(int)
     return;
   }
 
-
+  // Operate spaceship.
   SpaceShip& ss = game.spaceship_;
-  ss.Update();
 
-  // Update velocity of the spaceship.
   if (UpKeyPress) {
-    ss.velocity_.x -= sin(ss.direction_ / 360.0f * 2 * M_PI);
-    ss.velocity_.y += cos(ss.direction_ / 360.0f * 2 * M_PI);
+    ss.Thrust(Forward);
   }
   if (DownKeyPress) {
-    ss.velocity_.x += sin(ss.direction_ / 360.0f * 2 * M_PI);
-    ss.velocity_.y -= cos(ss.direction_ / 360.0f * 2 * M_PI);
+    ss.Thrust(Backward);
   }
-
-  if (ss.velocity_.x > MaxVelocity) {
-    ss.velocity_.x = MaxVelocity;
-  } else if (ss.velocity_.x < -MaxVelocity) {
-    ss.velocity_.x = -MaxVelocity;
-  }
-
-  if (ss.velocity_.y > MaxVelocity) {
-    ss.velocity_.y = MaxVelocity;
-  } else if (ss.velocity_.y < -MaxVelocity) {
-    ss.velocity_.y = -MaxVelocity;
-  }
-
   if (LeftKeyPress) {
-    ss.direction_ += 10.0f;
+    ss.Turn(Left);
   }
   if (RightKeyPress) {
-    ss.direction_ -= 10.0f;
+    ss.Turn(Right);
   }
+
+  ss.Update();
 
   // Shooting.
   if (ShootKeyPress) {
-    Bullet b(&game);
-    if (ss.Shoot(&b)) {
-      game.bullets_.push_back(b);
+    Bullet bullet(&game);
+    if (ss.Shoot(&bullet)) {
+      game.bullets_.push_back(bullet);
     }
   }
 
@@ -218,12 +204,17 @@ void timerCallback(int)
         if (collision(game.bullets_[k], game.asteroids_[i])) {
           game.asteroids_[i].velocity_.x += game.bullets_[k].velocity_.x * 0.1;
           game.asteroids_[i].velocity_.y += game.bullets_[k].velocity_.y * 0.1;
+          game.asteroids_[i].velocity_.x =
+              std::max(std::min(game.asteroids_[i].velocity_.x,
+                                MaxVelocityAsteroid), -MaxVelocityAsteroid);
+          game.asteroids_[i].velocity_.y =
+              std::max(std::min(game.asteroids_[i].velocity_.y,
+                                MaxVelocityAsteroid), -MaxVelocityAsteroid);
           game.bullets_.erase(game.bullets_.begin() + k);
           break;
         }
       }
   }
-
 
   // Update asteroids position.
   for (size_t i = 0; i < game.asteroids_.size(); ++i) {
@@ -266,10 +257,11 @@ void timerCallback(int)
         // Make them bounce only if in the next iteration they will be closer.
         if (distance(a.position_, b.position_) >
             distance(a.position_ + a.velocity_, b.position_ + b.velocity_)) {
-          a.velocity_.x *= -1.0f;
-          a.velocity_.y *= -1.0f;
-          b.velocity_.x *= -1.0f;
-          b.velocity_.y *= -1.0f;
+          std::swap(a.velocity_, b.velocity_);
+          a.velocity_.x *= 0.9;
+          a.velocity_.y *= 0.9;
+          b.velocity_.x *= 0.9;
+          b.velocity_.y *= 0.9;
         }
       }
     }
@@ -358,7 +350,8 @@ void processSpecialKeysUp (int key, int, int)
 int main (int argc, char * argv[])
 {
   glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+  glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
+  glEnable(GL_MULTISAMPLE);
   glutInitWindowPosition(100, 100);
   glutInitWindowSize(PanelWidth, PanelHeight);
   glutCreateWindow("Asteroids");

@@ -2,6 +2,7 @@
 
 #include "gameobject.h"
 #include "bullet.h"
+#include "enums.h"
 
 class Game;
 
@@ -12,6 +13,8 @@ class SpaceShip: public GameObject
     bool Shoot(Bullet* bullet);
 
     void Update();  // This is so gonna be a virtual method...
+    void Thrust(const enum Thrust thrust);
+    void Turn(const enum Turn turn);
 
   private:
     const float k_reload_time_;
