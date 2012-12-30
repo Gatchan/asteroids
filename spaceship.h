@@ -17,7 +17,7 @@ class SpaceShip: public GameObject
     void Turn(const enum Turn turn);
 
   private:
-    const float k_reload_time_;
-    float k_max_velocity_;
+    const float reload_time_;
+    float max_velocity_;
     float reload_countdown_;
 };

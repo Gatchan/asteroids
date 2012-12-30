@@ -1,5 +1,8 @@
 #pragma once
 
+struct Point;
+typedef Point Vector;
+
 struct Point
 {
   Point();

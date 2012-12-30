@@ -6,8 +6,8 @@
 
 void translateBoundingBox(const GameObject& object, std::vector<Point>* points)
 {
-  const Point& position = object.position_;
-  const BoundingBox& bounding_box = object.bounding_box_;
+  const Point& position = object.Position();
+  const BoundingBox& bounding_box = object.Bounding();
 
   points->push_back(Point(position.x + bounding_box.width / 2.0f,
                           position.y + bounding_box.height / 2.0f));
@@ -38,7 +38,7 @@ void rotateBoundingBox(const Point& origin, const float angle,
 void computeBoundingBox(const GameObject& object, std::vector<Point>* points)
 {
   translateBoundingBox(object, points);
-  rotateBoundingBox(object.position_, object.direction_ / 360 * 2 * M_PI,
+  rotateBoundingBox(object.Position(), object.Direction() / 360 * 2 * M_PI,
                     points);
 }
 
@@ -79,12 +79,12 @@ bool collision(const GameObject& lhs, const GameObject& rhs)
 {
   std::vector<Point> lhs_points;
   translateBoundingBox(lhs, &lhs_points);
-  rotateBoundingBox(lhs.position_, lhs.direction_ / 360 * 2 * M_PI,
+  rotateBoundingBox(lhs.Position(), lhs.Direction() / 360 * 2 * M_PI,
                     &lhs_points);
 
   std::vector<Point> rhs_points;
   translateBoundingBox(rhs, &rhs_points);
-  rotateBoundingBox(rhs.position_, rhs.direction_ / 360 * 2 * M_PI,
+  rotateBoundingBox(rhs.Position(), rhs.Direction() / 360 * 2 * M_PI,
                     &rhs_points);
 
   if (!overlap(lhs_points, rhs_points) || !overlap(rhs_points, lhs_points)) {

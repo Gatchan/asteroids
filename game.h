@@ -11,9 +11,8 @@
 class Game
 {
   public:
-    Game();
+    Game(const Size& window_size);
 
-    void SetWindowSize(const Size& size);
     Size WindowSize() const;
 
     SpaceShip spaceship_;

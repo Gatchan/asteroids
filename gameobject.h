@@ -2,10 +2,9 @@
 
 #include "point.h"
 #include "boundingbox.h"
+#include "utils.h"
 
 class Game;
-
-typedef Point Vector;
 
 class GameObject
 {
@@ -16,15 +15,24 @@ class GameObject
 
     bool OnScreen() const;
 
-    Point position_;
-    Vector velocity_;
-    float direction_;
+    Point Position() const;
+    float Direction() const;
+    Vector Velocity() const;
+    BoundingBox Bounding() const;
 
-    BoundingBox bounding_box_;
+    void SetPosition(const Point& position);
+    void SetDirection(const float direction);
+    void SetVelocity(const Vector& velocity);
+    void SetBounding(const BoundingBox& bounding_box);
 
   protected:
     // Simply update the position using the velocity of the object.
     void UpdatePosition();
+
+    Point position_;
+    Vector velocity_;
+    float direction_;
+    BoundingBox bounding_box_;
 
     Game* game_;
 };

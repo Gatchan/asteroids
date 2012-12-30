@@ -15,7 +15,7 @@ static const size_t CallbackTime = 40;
 static const float MaxVelocity = 10.0f;
 static const float MaxVelocityAsteroid = 5.0f;
 
-Game game;
+Game game(Size(800.0f, 600.0f));
 
 bool UpKeyPress = false;
 bool DownKeyPress = false;
@@ -34,12 +34,12 @@ void renderScene (void)
     Bullet& b = game.bullets_[i];
     glPushMatrix();
     glLoadIdentity();
-    glTranslatef(b.position_.x, b.position_.y, 0.0f);
-    glRotatef(b.direction_, 0.0f, 0.0f, 1.0f);
+    glTranslatef(b.Position().x, b.Position().y, 0.0f);
+    glRotatef(b.Direction(), 0.0f, 0.0f, 1.0f);
     glColor3f(1.0f, 1.0f, 1.0f);
     glBegin(GL_TRIANGLE_FAN);
       const float steps = 10;
-      const float scale = b.bounding_box_.width;
+      const float scale = b.Bounding().width;
       for (int i = 0; i < steps; ++i) {
         const float angle = 2.0f * M_PI * i / float(steps);
         glVertex2f(scale * sin(angle), scale * cos(angle));
@@ -55,11 +55,11 @@ void renderScene (void)
     Asteroid& a = game.asteroids_[i];
     glPushMatrix();
     glLoadIdentity();
-    glTranslatef(a.position_.x, a.position_.y, 0.0f);
-    glRotatef(a.direction_, 0.0f, 0.0f, 1.0f);
+    glTranslatef(a.Position().x, a.Position().y, 0.0f);
+    glRotatef(a.Direction(), 0.0f, 0.0f, 1.0f);
     glBegin(GL_TRIANGLE_FAN);
-      const float x_scale = a.bounding_box_.width / 2.0f;
-      const float y_scale = a.bounding_box_.height / 2.0f;
+      const float x_scale = a.Bounding().width / 2.0f;
+      const float y_scale = a.Bounding().height / 2.0f;
       glVertex2f(-1.0f * x_scale, 0.0f * y_scale);
       glVertex2f(-0.8f * x_scale, 0.3f * y_scale);
       glVertex2f(-0.1f * x_scale, 0.7f * y_scale);
@@ -96,13 +96,13 @@ void renderScene (void)
     SpaceShip& ss = game.spaceship_;
     glPushMatrix();
     glLoadIdentity();
-    glTranslatef(ss.position_.x, ss.position_.y, 0.0f);
-    glRotatef(ss.direction_, 0.0f, 0.0f, 1.0f);
+    glTranslatef(ss.Position().x, ss.Position().y, 0.0f);
+    glRotatef(ss.Direction(), 0.0f, 0.0f, 1.0f);
     glColor3f(1.0f, 1.0f, 1.0f);
     glBegin(GL_TRIANGLE_FAN);
       const float steps = 100;
-      const float scale = std::max(ss.bounding_box_.width,
-                                   ss.bounding_box_.height) * 2.0f;
+      const float scale = std::max(ss.Bounding().width,
+                                   ss.Bounding().height) * 2.0f;
       for (int i = 0; i < steps; ++i) {
         const float angle = 2.0f * M_PI * i / float(steps);
         glVertex2f(scale * sin(angle), scale * cos(angle));
@@ -114,12 +114,12 @@ void renderScene (void)
     SpaceShip& ss = game.spaceship_;
     glPushMatrix();
     glLoadIdentity();
-    glTranslatef(ss.position_.x, ss.position_.y, 0.0f);
-    glRotatef(ss.direction_, 0.0f, 0.0f, 1.0f);
+    glTranslatef(ss.Position().x, ss.Position().y, 0.0f);
+    glRotatef(ss.Direction(), 0.0f, 0.0f, 1.0f);
     glColor3f(1.0f, 0.1f, 0.0f);
     glBegin(GL_TRIANGLES);
-      const float x_scale = ss.bounding_box_.width / 2.0f;
-      const float y_scale = ss.bounding_box_.height / 2.0f;
+      const float x_scale = ss.Bounding().width / 2.0f;
+      const float y_scale = ss.Bounding().height / 2.0f;
       glVertex2f(-1.0f * x_scale, -1.0f * y_scale);
       glVertex2f(0.0f * x_scale, 1.0f * y_scale);
       glVertex2f(1.0f * x_scale, -1.0f * y_scale);
@@ -182,7 +182,7 @@ void timerCallback(int)
   // Update positions of bullets.
   for (size_t i = 0; i < game.bullets_.size(); ++i) {
     Bullet& b = game.bullets_[i];
-    b.position_ += b.velocity_;
+    b.SetPosition(b.Position() + b.Velocity());
   }
 
   // Remove bullets when they are out of the screen.
@@ -198,13 +198,14 @@ void timerCallback(int)
   for (size_t k = 0; k < game.bullets_.size(); ++k) {
       for (size_t i = 0; i < game.asteroids_.size(); ++i) {
         if (collision(game.bullets_[k], game.asteroids_[i])) {
-          game.asteroids_[i].velocity_ += game.bullets_[k].velocity_ * 0.1;
-          game.asteroids_[i].velocity_.x =
-              std::max(std::min(game.asteroids_[i].velocity_.x,
-                                MaxVelocityAsteroid), -MaxVelocityAsteroid);
-          game.asteroids_[i].velocity_.y =
-              std::max(std::min(game.asteroids_[i].velocity_.y,
-                                MaxVelocityAsteroid), -MaxVelocityAsteroid);
+          Vector velocity = game.asteroids_[i].Velocity() +
+                            game.bullets_[k].Velocity() * 0.1f;
+          velocity.x = std::max(std::min(velocity.x, MaxVelocityAsteroid),
+                                -MaxVelocityAsteroid);
+          velocity.y = std::max(std::min(velocity.y, MaxVelocityAsteroid),
+                                -MaxVelocityAsteroid);
+          game.asteroids_[i].SetVelocity(velocity);
+
           game.bullets_.erase(game.bullets_.begin() + k);
           break;
         }
@@ -240,11 +241,16 @@ void timerCallback(int)
 
       if (collision(a, b)) {
         // Make them bounce only if in the next iteration they will be closer.
-        if (distance(a.position_, b.position_) >
-            distance(a.position_ + a.velocity_, b.position_ + b.velocity_)) {
-          std::swap(a.velocity_, b.velocity_);
-          a.velocity_ *= 0.9f;
-          b.velocity_ *= 0.9f;
+        if (distance(a.Position(), b.Position()) >
+            distance(a.Position() + a.Velocity(), b.Position() + b.Velocity())) {
+
+          Vector tmp = a.Velocity();
+          a.SetVelocity(b.Velocity());
+          b.SetVelocity(tmp);
+
+          // Every time that asteroids collide they slow down.
+          a.Velocity() *= 0.9f;
+          b.Velocity() *= 0.9f;
         }
       }
     }
@@ -326,8 +332,6 @@ void processSpecialKeysUp (int key, int, int)
 
 int main (int argc, char * argv[])
 {
-  game.SetWindowSize(Size(800, 600));
-
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
   glEnable(GL_MULTISAMPLE);

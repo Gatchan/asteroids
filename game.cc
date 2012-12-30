@@ -4,37 +4,30 @@
 #include <cstdlib>
 #include <cmath>
 
-Game::Game()
+Game::Game(const Size& window_size)
 : spaceship_(this)
 , over_(false)
+, window_(window_size)
 {
-  spaceship_.position_.x = 100.0f;
-  spaceship_.position_.y = 100.0f;
-  spaceship_.velocity_.x = 0.0f;
-  spaceship_.velocity_.y = 0.0f;
-  spaceship_.direction_ = 0.0f;
-  spaceship_.bounding_box_.width = 10;
-  spaceship_.bounding_box_.height = 20;
+  spaceship_.SetPosition(Point(100.0f, 100.0f));
+  spaceship_.SetVelocity(Vector(0.0f, 0.0f));
+  spaceship_.SetDirection(0.0f);
+  spaceship_.SetBounding(BoundingBox(10.0f, 20.0f));
 
   for (int i = 0; i < 20; ++i) {
     Asteroid a(this);
-    a.position_.x = rand() % 800;
-    a.position_.y = rand() % 600;
-    a.velocity_.x = (rand() / float(RAND_MAX) - .5f) * 2.0f;
-    a.velocity_.y = (rand() / float(RAND_MAX) - .5f) * 2.0f;
-    a.direction_ = rand() / float(RAND_MAX) * 2 * M_PI;
-    a.bounding_box_.width = 15 + (rand() / float(RAND_MAX) * 10.0f);
-    a.bounding_box_.height = 15 + (rand() / float(RAND_MAX) * 10.0f);
+    a.SetPosition(Point(rand() % int(window_.width),
+                        rand() % int(window_.height)));
+    a.SetVelocity(Vector((rand() / float(RAND_MAX) - .5f) * 2.0f,
+                         (rand() / float(RAND_MAX) - .5f) * 2.0f));
+    a.SetDirection(rand() / float(RAND_MAX) * 2 * M_PI);  // XXX
+    a.SetBounding(BoundingBox(15.0f + (rand() / float(RAND_MAX) * 10.0f),
+                              15.0f + (rand() / float(RAND_MAX) * 10.0f)));
 
     asteroids_.push_back(a);
   }
 }
 
-
-void Game::SetWindowSize(const Size& size)
-{
-  window_ = size;
-}
 Size Game::WindowSize() const
 {
   return window_;
