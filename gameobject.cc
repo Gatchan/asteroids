@@ -6,7 +6,7 @@ GameObject::GameObject(Game* game)
 {
 }
 
-void GameObject::Update()
+void GameObject::UpdatePosition()
 {
   position_.x = position_.x + velocity_.x;
   position_.y = position_.y + velocity_.y;

@@ -214,16 +214,7 @@ void timerCallback(int)
   // Update asteroids position.
   for (size_t i = 0; i < game.asteroids_.size(); ++i) {
     Asteroid& a = game.asteroids_[i];
-    a.position_ += a.velocity_;
-    a.direction_ += a.rotation_speed_;
-
-    if (a.position_.x < 0.0f || a.position_.x > game.WindowSize().width) {
-      a.velocity_.x *= -1.0f;
-    }
-
-    if (a.position_.y < 0.0f || a.position_.y > game.WindowSize().height) {
-      a.velocity_.y *= -1.0f;
-    }
+    a.Update();
   }
 
   // Collision between spaceship and asteroids.
@@ -356,7 +347,6 @@ int main (int argc, char * argv[])
   gluOrtho2D(0, game.WindowSize().width, 0, game.WindowSize().height);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-
 
   glutMainLoop();
 

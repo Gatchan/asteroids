@@ -12,7 +12,7 @@ class GameObject
   public:
     GameObject(Game* game);
 
-    virtual void Update();
+    virtual void Update() = 0;
 
     bool OnScreen() const;
 
@@ -23,5 +23,8 @@ class GameObject
     BoundingBox bounding_box_;
 
   protected:
+    // Simply update the position using the velocity of the object.
+    void UpdatePosition();
+
     Game* game_;
 };

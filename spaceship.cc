@@ -14,12 +14,13 @@ SpaceShip::SpaceShip(Game* game)
 
 void SpaceShip::Update()
 {
-  // Upate position.
-  GameObject::Update();
+  UpdatePosition();
 
+  // Spaceships slow down.
   velocity_.x *= .99f;
   velocity_.y *= .99f;
 
+  // Spaceships wrap around the window.
   if (position_.x < 0.0f) {
     position_.x = game_->WindowSize().width;
   } else if (position_.x > game_->WindowSize().width) {
@@ -32,6 +33,7 @@ void SpaceShip::Update()
     position_.y = 0.0f;
   }
 
+  // Countdown until next bullet is available.
   if (reload_countdown_ > 0) {
     --reload_countdown_;
   }
@@ -43,10 +45,8 @@ bool SpaceShip::Shoot(Bullet* bullet)
     return false;
   }
 
-  bullet->bounding_box_.width = 2;
-  bullet->bounding_box_.height = 2;
-  bullet->position_.x = position_.x;  // Update
-  bullet->position_.y = position_.y;
+  bullet->bounding_box_ = Size(2.0f, 2.0f);
+  bullet->position_ = position_;  // Update
   bullet->velocity_.x = velocity_.x + k_max_velocity_ * 1.2 * -sin(direction_ / 360.0f * 2 * M_PI);
   bullet->velocity_.y = velocity_.y + k_max_velocity_ * 1.2 * cos(direction_ / 360.0f * 2 * M_PI);
   bullet->direction_ = direction_;
@@ -81,6 +81,7 @@ void SpaceShip::Thrust(const enum Thrust thrust)
       break;
   }
 
+  // Limit speed.
   if (velocity_.x > k_max_velocity_) {
     velocity_.x = k_max_velocity_;
   } else if (velocity_.x < -k_max_velocity_) {

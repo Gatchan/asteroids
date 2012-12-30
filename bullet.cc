@@ -7,5 +7,5 @@ Bullet::Bullet(Game* game)
 
 void Bullet::Update()
 {
-  GameObject::Update();
+  UpdatePosition();
 }

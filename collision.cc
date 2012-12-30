@@ -75,7 +75,7 @@ bool overlap(const std::vector<Point>& lhs, const std::vector<Point>& rhs)
   return true;
 }
 
-bool collision(const GameObject& lhs, const GameObject rhs)
+bool collision(const GameObject& lhs, const GameObject& rhs)
 {
   std::vector<Point> lhs_points;
   translateBoundingBox(lhs, &lhs_points);

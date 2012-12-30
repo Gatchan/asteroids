@@ -4,5 +4,5 @@
 
 #include <vector>
 
-bool collision(const GameObject& lhs, const GameObject rhs);
+bool collision(const GameObject& lhs, const GameObject& rhs);
 void computeBoundingBox(const GameObject& object, std::vector<Point>* points);
